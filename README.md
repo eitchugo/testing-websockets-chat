@@ -4,6 +4,8 @@ An example web application that supports websockets to create chat rooms.
 
 This is just for fun and there's no storage for anything. Each run resets everything.
 
+https://raw.githubusercontent.com/eitchugo/testing-websockets-chat/main/demo.mp4
+
 ## Using
 
 ```bash
