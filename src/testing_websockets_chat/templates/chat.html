@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Testing Websockets Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='img/site.webmanifest') }}">
+    <link rel="mask-icon" href="{{ url_for('static', filename='img/safari-pinned-tab.svg') }}" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    <script src="{{ url_for('static', filename='js/socket.io-3.1.3.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vanilla-emoji-picker-2.0.1.js') }}"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>Testing Websockets Chat</h1>
+    </div>
+
+    <div id="mainwrapper" class="mainwrapper">
+        <div id="userjoinedchannels" class="userjoinedchannels">
+            <span id="userjoinedchannels-title" class="userjoinedchannels-title">Joined Channels</span>
+            <ul id="userjoinedchannels-items" id="userjoinedchannels-items">
+            </ul>
+        </div>
+
+        <div id="megachatwrapper">
+            <div id="chatwrapper-general" class="chatwrapper chat-active">
+                <ul id="messages-general" class="messages">
+                </ul>
+            </div>
+        </div>
+
+        <div id="memberlist" class="memberlist">
+            <div id="memberlist-tabs">
+                <button
+                    id="memberlist-tab-channel"
+                    aria-selected="true"
+                    aria-controls="memberlist-panel-channel"
+                    role="memberlist-tab"
+                    type="button">
+                    Channel
+                </button>
+                <button
+                    id="memberlist-tab-global"
+                    aria-selected="false"
+                    aria-controls="memberlist-panel-global"
+                    role="memberlist-tab"
+                    type="button">
+                    Global
+                </button>
+            </div>
+
+            <div id="memberlist-panel-channel" aria-labelledby="memberlist-tab-channel" role="memberlist-panel">
+                <span id="memberlist-channel" class="memberlist-channel"></span>
+                <ul id="memberlist-ul-general" class="memberlist-nicks">
+                </ul>
+            </div>
+
+            <div id="memberlist-panel-global" aria-labelledby="memberlist-tab-global" role="memberlist-panel" hidden>
+                <span id="memberlist-global" class="memberlist-global">All users</span>
+                <ul id="memberlist-global-nicks" class="memberlist-global-nicks">
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="sendwrapper" class="sendwrapper">
+      <div class="send-message">
+          <input class="message" type="text" onkeypress="clickPress(event)" id="message" placeholder="Type a message" maxlength="300">
+          <div class="send-message-button">
+              <img onclick="sendMessage(); clearMessageField();" src="{{ url_for('static', filename='img/arrow.png') }}" />
+          </div>
+      </div>
+
+      <div id="buttonwrapper" class="buttonwrapper">
+        <button class="emoji-button" style="background: url({{ url_for('static', filename='img/emoji_happy.png') }})"/>
+      </div>
+    </div>
+
+    <div class="footer">
+        <a href="/logout">Logout</a>
+    </div>
+
+    <script type="text/javascript">
+        new EmojiPicker({
+            trigger: [
+                {
+                    selector: '.emoji-button',
+                    insertInto: '.message'
+                }
+            ]
+        });
+    </script>
+    <script type="text/javascript">
+        var socket = io.connect(document.location.protocol + '//' + document.domain + ':' + location.port);
+        var nick = "{{ nick }}";
+        var channel = "#general";
+
+        var notificationSound = new Audio('{{ url_for('static', filename='sound/happy-pop-2-185287.mp3') }}');
+
+        // Connect with the websocket
+        socket.on('connect', function () {
+            console.log('Connected to the websockets server');
+            // Identity ourselves with our nickname
+            data = {
+                'nick': nick,
+                'channel': channel,
+                'message': 'CONN ' + nick
+            }
+            socket.emit('server_message', JSON.stringify(data));
+            document.getElementById('memberlist-channel').innerHTML = channel;
+        });
+
+        socket.on('ping', function () {
+            socket.emit('pong', '{}')
+        });
+
+        // We received a command from the server
+        socket.on('server_command', function (data) {
+            jsonData = JSON.parse(data);
+
+            if (jsonData['command'] == 'CHANGE_NICK') {
+                nick = jsonData['value'];
+            }
+
+            // update user list
+            else if (jsonData['command'] == 'GLOBAL_USER_LIST') {
+                var globalMemberList = document.getElementById('memberlist-global-nicks');
+                while(globalMemberList.firstChild && globalMemberList.removeChild(globalMemberList.firstChild));
+                console.log(jsonData['value']);
+
+                for (const listNick of jsonData['value']) {
+                    var li = document.createElement('li')
+                    li.appendChild(document.createTextNode(listNick));
+                    globalMemberList.appendChild(li);
+                }
+            }
+
+            // update channel user list
+            else if (jsonData['command'] == 'CHANNEL_USER_LIST') {
+                strippedChannel = jsonData['value']['channel'].replace(/^#/, '');
+
+                var memberList = document.getElementById('memberlist-ul-' + strippedChannel);
+                while(memberList.firstChild && memberList.removeChild(memberList.firstChild));
+
+                for (const list_nick of jsonData['value']['users']) {
+                    var li = document.createElement('li')
+                    li.appendChild(document.createTextNode(list_nick));
+                    memberList.appendChild(li);
+                }
+            }
+
+            // change current channel on frontend
+            else if (jsonData['command'] == 'CHANGE_CHANNEL') {
+                setActiveChannel(jsonData['value']);
+            }
+
+            // update user joined channels
+            if (jsonData['command'] == 'USER_JOINED_CHANNELS') {
+                var memberList = document.getElementById('userjoinedchannels-items');
+                while(memberList.firstChild && memberList.removeChild(memberList.firstChild));
+
+                for (const listChannel of jsonData['value']) {
+                    var li = document.createElement('li')
+                    strippedChannel = listChannel.replace(/^#/, '');
+                    li.setAttribute('id', 'userjoinedchannel-' + strippedChannel);
+                    li.setAttribute('onclick', "setActiveChannel('" + listChannel + "');");
+                    li.appendChild(document.createTextNode(listChannel));
+                    memberList.appendChild(li);
+                }
+
+                setActiveChannel(channel);
+            }
+        });
+
+        // We received a normal message from the server
+        socket.on('response', function (data) {
+            showMessage(data);
+        });
+
+        // Show the message on the screen
+        function showMessage(data) {
+            jsonData = JSON.parse(data)
+
+            if (jsonData.channel == 'current') {
+                showOnChannel = channel.replace(/^#/, '');
+            } else {
+                showOnChannel = jsonData.channel.replace(/^#/, '');
+            }
+
+            var ul = document.getElementById("messages-" + showOnChannel);
+            var li = document.createElement("li");
+            var timeSpan = document.createElement("span");
+
+            timeSpan.setAttribute("class", "message-timestamp");
+            var timestamp = new Date(jsonData.timestamp * 1000).toLocaleString("pt-BR")
+            timeSpan.appendChild(document.createTextNode(timestamp));
+
+            // different colors for different users
+            if (jsonData.nick == nick) {
+                li.setAttribute("class", "me");
+            } else if (jsonData.nick == "SERVER") {
+                li.setAttribute("class", "server");
+            } else {
+                notificationSound.play();
+                li.setAttribute("class", "others");
+                li.appendChild(document.createTextNode(jsonData.nick));
+                li.appendChild(document.createElement("br"));
+            }
+
+            li.appendChild(document.createTextNode(jsonData.message));
+            li.appendChild(document.createElement("br"));
+            li.appendChild(timeSpan);
+            ul.appendChild(li);
+
+            // scroll down to the last message
+            var chatwrapper = document.getElementById('chatwrapper-' + showOnChannel);
+            chatwrapper.scrollTop = chatwrapper.scrollHeight;
+        }
+
+        function sendMessage() {
+            var message = document.getElementById('message').value;
+            var msg_len = message.length;
+
+            if ((msg_len < 1) || (msg_len > 300)) {
+                return false;
+            }
+
+            if (message.startsWith('/')) {
+                var echo_data = {
+                    'nick': nick,
+                    'channel': channel,
+                    'message': message,
+                    'timestamp': Math.floor(Date.now() / 1000)
+                }
+                showMessage(JSON.stringify(echo_data));
+
+                var message_type = 'server_message';
+                command = message.replace(/^\/([a-zA-Z0-9_]+).*/, "$1");
+                command = command.trim();
+                command = command.toUpperCase();
+                argument = message.replace(/^\/([a-zA-Z0-9_]+)/, '');
+                argument = argument.trim();
+                message = command + ' ' + argument;
+                message = message.trim();
+            } else {
+                var message_type = 'message';
+            }
+
+            data = {
+                'nick': nick,
+                'channel': channel,
+                'message': message
+            }
+            socket.emit(message_type, JSON.stringify(data));
+        }
+
+        function clearMessageField() {
+            document.getElementById('message').value = "";
+        }
+
+        function clickPress(event) {
+            if (event.key == "Enter") {
+                sendMessage(); clearMessageField();
+            }
+        }
+
+        function setActiveMemberListTab(index) {
+          // Make currently active tab inactive
+          memberListTabElements[memberListActiveIndex].setAttribute("aria-selected", "false");
+        
+          // Set the new tab as active
+          memberListTabElements[index].setAttribute("aria-selected", "true");
+        
+          setActiveMemberListPanel(index);
+          memberListActiveIndex = index;
+        }
+
+        function setActiveMemberListPanel(index) {
+          // Hide currently active panel
+          memberListPanelElements[memberListActiveIndex].setAttribute("hidden", "");
+        
+          // Show the new active panel
+          memberListPanelElements[index].removeAttribute("hidden");
+        }
+
+        const memberListTabElements = document.querySelectorAll('button[role="memberlist-tab"]');
+        const memberListPanelElements = document.querySelectorAll('[role="memberlist-panel"]');
+        let memberListActiveIndex = 0;
+
+        // Listen to clicks on tabs
+        memberListTabElements.forEach(function (tab, index) {
+            tab.addEventListener("click", function (event) {
+                setActiveMemberListTab(index);
+            });
+        });
+
+        // user joined channel selection
+        function setActiveChannel(channelName) {
+            strippedChannelName = channelName.replace(/^#/, '');
+            strippedOldChannelName = channel.replace(/^#/, '');
+
+            // get old and new chat wrappers
+            var channelWrapperElement = document.getElementById('megachatwrapper');
+            var activeChannelElement = document.getElementById('chatwrapper-' + strippedOldChannelName);
+            var newActiveChannelElement = document.getElementById('chatwrapper-' + strippedChannelName);
+
+            // get old and new channel user lists
+            var membersWrapperElement = document.getElementById('memberlist-panel-channel');
+            var memberListElement = document.getElementById('memberlist-ul-' + strippedOldChannelName);
+            var newMemberListElement = document.getElementById('memberlist-ul-' + strippedChannelName);
+
+            // get old and new user joined channels
+            var userJoinedChannelElement = document.getElementById('userjoinedchannel-' + strippedOldChannelName);
+            var newUserJoinedChannelElement = document.getElementById('userjoinedchannel-' + strippedChannelName);
+
+            // create our new channel tab if it doesnt exist
+            if (newActiveChannelElement == null) {
+                var divNew = document.createElement('div');
+                var ulNew = document.createElement('ul');
+                divNew.setAttribute('id', 'chatwrapper-' + strippedChannelName);
+                divNew.setAttribute('class', 'chatwrapper');
+                ulNew.setAttribute('id', 'messages-' + strippedChannelName);
+                ulNew.setAttribute('class', 'messages');
+
+                divNew.appendChild(ulNew);
+                channelWrapperElement.appendChild(divNew);
+                newActiveChannelElement = document.getElementById('chatwrapper-' + strippedChannelName);
+            }
+
+            // create our new channel user list if it doesnt exist
+            if (newMemberListElement == null) {
+                var memberList = document.createElement('ul');
+                memberList.setAttribute('id', 'memberlist-ul-' + strippedChannelName);
+                memberList.setAttribute('class', 'memberlist-nicks');
+
+                membersWrapperElement.appendChild(memberList);
+                newMemberListElement = document.getElementById('memberlist-ul-' + strippedChannelName);
+            }
+
+            // create the user joined channel if it doesnt exist
+            if (newUserJoinedChannelElement == null) {
+                var userJoinedChannels = document.getElementById('userjoinedchannels-items');
+                var userJoinedChannelItem = document.createElement('li')
+                userJoinedChannelItem.setAttribute('id', 'userjoinedchannel-' + strippedChannelName);
+                userJoinedChannelItem.setAttribute('onclick', "setActiveChannel('" + strippedChannelName + "');");
+                userJoinedChannelItem.appendChild(document.createTextNode(channelName));
+                userJoinedChannels.appendChild(userJoinedChannelItem);
+
+                var newUserJoinedChannelElement = document.getElementById('userjoinedchannel-' + strippedChannelName);
+            }
+
+            // set current channel on client and title
+            channel = channelName;
+            document.getElementById('memberlist-channel').innerHTML = channelName;
+
+            // switch tabs
+            activeChannelElement.setAttribute('hidden', '');
+            activeChannelElement.classList.remove('chat-active');
+            newActiveChannelElement.removeAttribute('hidden');
+            newActiveChannelElement.classList.add('chat-active');
+
+            memberListElement.setAttribute('hidden', '');
+            memberListElement.classList.remove('memberlist-active');
+            newMemberListElement.removeAttribute('hidden');
+            newMemberListElement.classList.add('memberlist-active');
+
+            userJoinedChannelElement.classList.remove('userjoinedchannels-current');
+            newUserJoinedChannelElement.classList.add('userjoinedchannels-current');
+        }
+    </script>
+</body>
+</html>

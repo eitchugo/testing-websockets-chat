@@ -1,0 +1,237 @@
+a,
+a:focus,
+a:hover {
+  color: #fff;
+}
+
+html {
+  margin: 0;
+}
+
+body {
+  background-color: #333;
+  margin: 0;
+  text-align: center;
+  text-shadow: 0 .05rem .1rem rgba(0,0,0,.5);
+}
+
+.header {
+  color: #fff;
+  margin: 0 auto 10px auto;
+  padding: 10px;
+  background-color: #242426;
+}
+
+.login {
+  margin: 20px auto 20px auto;
+  background-color: white;
+  border-radius: 100px;
+  box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 6px, rgba(0, 0, 0, 0.12) 0px 1px 4px;
+  height: 50px;
+  line-height: 50px;
+  overflow: hidden;
+  width: 600px;
+  font-size: 1.2em;
+  font-weight: 300;
+}
+
+.login-message {
+  margin: 10px auto 10px auto;
+  text-align: center;
+  color: #ffffff;
+  font-size: 1em;
+  font-weight: 300;
+}
+
+.mainwrapper {
+  width: 900px;
+  margin: auto;
+  padding-top: 10px;
+  height: 500px;
+}
+
+.userjoinedchannels {
+  float: left;
+  color: #ffffff;
+  width: 150px;
+  height: 500px;
+  overflow: auto;
+  border-radius: 5px 5px 5px 5px;
+  background-color: #434343;
+  margin: 0;
+}
+
+.userjoinedchannels-title {
+  font-size: 1.5em;
+}
+
+.userjoinedchannels-current {
+  color: #000000;
+  background-color: #ffffff;
+  border-radius: 0.25rem;
+  padding: 2px 0 2px 0;
+}
+
+.userjoinedchannels ul {
+  margin: 10px 10px 10px 20px;
+  padding: 0;
+  list-style-type: none;
+  text-align: left;
+}
+
+.global-memberlist {
+  display: none;
+}
+
+.memberlist {
+  float: right;
+  color: #ffffff;
+  width: 150px;
+  height: 500px;
+  overflow: auto;
+  /* background-color: #434343; */
+  background-color: #434343;
+  border-radius: 5px 5px 5px 5px;
+  margin: 0;
+}
+
+button[role="memberlist-tab"] {
+  color: #969696;
+  background: none;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+button[role="memberlist-tab"][aria-selected="true"] {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+button[role="memberlist-tab"][aria-selected="false"]:hover {
+  color: #07409f;
+}
+
+#memberlist-panel-channel, #memberlist-panel-global {
+  margin-top: 10px;
+}
+
+.memberlist-channel, .memberlist-global {
+  font-size: 1.5em;
+}
+
+.memberlist ul {
+  margin: 25px 20px 10px 0px;
+  padding: 0;
+  list-style-type: none;
+  text-align: right;
+}
+
+.chatwrapper {
+  float: left;
+  width: 600px;
+  height: 500px;
+  overflow: auto;
+  text-align: center;
+  border-radius: 5px 5px 5px 5px;
+  margin: 0;
+}
+
+.chatwrapper .messages {
+  list-style-type: none;
+  margin: 0;
+}
+
+.chatwrapper .messages li {
+  width: 70%;
+  float: right;
+  text-align: right;
+  padding: 10px;
+  border-radius: 5px 5px 5px 5px;
+  font-size: 1.2em;
+  background-color: #87eb96;
+  color: #000000;
+  margin: 0 10px 10px 0;
+  overflow-wrap: break-word;
+  white-space: pre-line;
+}
+
+.chatwrapper .messages span.message-timestamp {
+  font-size: 10px;
+}
+
+.chatwrapper .messages li.others {
+  float: left;
+  text-align: left;
+  background-color: #87d0eb;
+  margin: 0 10px 10px 0;
+}
+
+.chatwrapper .messages li.server {
+  width: 100%;
+  text-align: center;
+  background-color: #ebcd87;
+  margin: 0 10px 10px auto;
+}
+
+.sendwrapper {
+  width: 900px;
+  margin: auto;
+  padding-top: 10px;
+}
+
+.send-message {
+  float: left;
+  margin: 10px auto 20px 150px;
+  background-color: white;
+  border-radius: 100px;
+  box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 6px, rgba(0, 0, 0, 0.12) 0px 1px 4px;
+  height: 50px;
+  line-height: 50px;
+  overflow: hidden;
+  width: 600px;
+}
+
+.message {
+  border: none;
+  color: #686565;
+  font-size: 1.2em;
+  font-weight: 300;
+  margin-left: 20px;
+  outline: none;
+  width: 480px;
+}
+
+.send-message-button {
+  float: right;
+  cursor: pointer;
+  width: 45px;
+  height: 45px;
+  vertical-align: middle;
+}
+
+.buttonwrapper {
+  margin: 10px 60px 20px auto;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.emoji-button {
+  cursor: pointer;
+  width: 50px;
+  height: 50px;
+  vertical-align: middle;
+  border: 0;
+}
+
+.footer {
+  margin: 10px auto auto auto;
+  padding: 10px;
+  background-color: #242426;
+  box-shadow: 0 50vh 0 50vh #242426;
+}
+
+.footer a:link {
+  text-decoration: none;
+}
